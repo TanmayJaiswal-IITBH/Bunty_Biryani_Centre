@@ -17,6 +17,7 @@ import { requireAdmin } from './middleware/require-admin.js';
 import { validate } from './middleware/validate.js';
 import { adminAuthHandlers } from './routes/admin/auth.js';
 import { healthHandler } from './routes/health.js';
+import { menuHandler } from './routes/menu.js';
 import { mountClient } from './static.js';
 
 export interface AppLimits {
@@ -81,6 +82,7 @@ export function createApp({
   });
   api.use(express.json({ limit: '10kb' }));
   api.get('/health', healthHandler(prisma));
+  api.get('/menu', menuHandler(prisma, clock));
 
   const auth = adminAuthHandlers({
     prisma,
