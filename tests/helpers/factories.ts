@@ -52,6 +52,10 @@ export function createMenuItem(
     stock?: number;
     stockDate?: string | null;
     isAvailable?: boolean;
+    isActive?: boolean;
+    sortOrder?: number;
+    description?: string | null;
+    imageUrl?: string | null;
   } = {},
 ) {
   const stock = data.stock ?? 10;
@@ -61,6 +65,10 @@ export function createMenuItem(
       name: data.name ?? 'Chicken Biryani',
       price: data.price ?? 150,
       isAvailable: data.isAvailable ?? true,
+      isActive: data.isActive ?? true,
+      sortOrder: data.sortOrder ?? 0,
+      description: data.description ?? null,
+      imageUrl: data.imageUrl ?? null,
       dailyStock: stock,
       stockRemaining: stock,
       stockDate: stockDate ? toDbDate(stockDate) : null,

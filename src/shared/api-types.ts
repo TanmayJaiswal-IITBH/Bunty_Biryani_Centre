@@ -1,4 +1,6 @@
+import type { z } from 'zod';
 import type { ErrorCode } from './errors.js';
+import type { publicMenuItemSchema, publicMenuSchema } from './schemas/menu.js';
 
 /** Every API error looks like this (Batch 1 §8.1). `message` is safe to show to a customer. */
 export interface ApiErrorBody {
@@ -17,3 +19,7 @@ export interface AdminSession {
 export interface HealthResponse {
   status: 'ok' | 'error';
 }
+
+/** `GET /api/menu` (Batch 1 §8.4). Derived from the zod schema so the two cannot drift. */
+export type PublicMenuItem = z.output<typeof publicMenuItemSchema>;
+export type PublicMenu = z.output<typeof publicMenuSchema>;

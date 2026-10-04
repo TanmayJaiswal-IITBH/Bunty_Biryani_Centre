@@ -31,7 +31,7 @@ The project is built in batches (brief §31). Do **only the current batch**; don
 |---|---|---|---|
 | 1 | Architecture, database schema, API design | `batch-01-architecture.md` | Approved 2026-10-04 |
 | 2 | Project setup, database, migrations + seed, admin authentication | `batch-02-setup-auth.md` | Built 2026-10-04; owner still to run `pnpm admin:create` in PowerShell (spec §13) |
-| 3 | Customer menu + cart | `batch-03-menu-cart.md` | — |
+| 3 | Customer menu + cart | `batch-03-menu-cart.md` | Built 2026-10-04; owner still to run the manual phone checks in spec §11.3 |
 | 4 | Checkout + batch/express delivery selection | `batch-04-checkout-delivery.md` | — |
 | 5 | Order creation + inventory | `batch-05-orders-inventory.md` | — |
 | 6 | Vendor dashboard + batch grouping (+ admin menu, stock, delivery settings) | `batch-06-vendor-dashboard.md` | — |

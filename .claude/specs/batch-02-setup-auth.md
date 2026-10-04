@@ -388,14 +388,14 @@ Usage rules:
 
 | Component | Notes |
 |---|---|
-| `Button` | variants `primary`, `secondary` (surface + line border), `ghost`, `danger` (danger colour, for destructive confirms only); `loading` prop shows a spinner and sets `aria-busy`; `fullWidth` |
+| `Button` | variants `primary`, `secondary` (surface + line border), **(as built, Batch 3)** `outline` (1px `border-brand`, `bg-surface text-brand`, hover `bg-gold-soft` like `secondary`; the menu's "Add" button), `ghost`, `danger` (danger colour, for destructive confirms only); `loading` prop shows a spinner and sets `aria-busy`; `fullWidth` |
 | `TextField` | label always visible, optional hint, error with icon (`aria-describedby`, `aria-invalid`); passes `inputMode`, `autoComplete` |
 | `Banner` | `info`, `warning`, `danger`, `success`; icon + text + optional action; `role="status"` (or `role="alert"` for danger) |
 | `Skeleton` | grey-cream blocks with a subtle pulse (none under reduced motion) |
 | `ErrorState` | icon, title, message, "Try again" button |
 | `EmptyState` | icon, title, message, optional action |
 | `Icon` set | inline SVG React components: `alert`, `info`, `check`, `x`, `plus`, `minus`, `phone`, `clock`, `map-pin`, `cart`, `chevron-right`, `bolt`, `truck`, `eye`, `eye-off`. No icon library |
-| `AppHeader` | sun-yellow band, logo, "BUNTY BIRYANI CENTRE" (Archivo); used by customer pages |
+| `AppHeader` | sun-yellow band, logo, "BUNTY BIRYANI CENTRE" (Archivo); used by customer pages **(as built, Batch 3)** renders the page `<h1>` (logo + brand name, linked to `/`), takes an optional `subline` (e.g. "Today's menu · Sun, 4 Oct"), and the logo has `alt=""` because the brand text beside it is the name. New `CustomerPage` (`components/CustomerPage.tsx`) wraps `AppHeader` and the centred `main`; `reserveCartBar` adds bottom padding `calc(5.5rem + env(safe-area-inset-bottom))` so the sticky cart bar never covers the last card |
 | `AdminShell` | §7.4 |
 
 ## 11. Edge cases handled in this batch

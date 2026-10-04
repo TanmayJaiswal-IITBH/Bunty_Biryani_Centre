@@ -1,11 +1,13 @@
 import type { ComponentProps } from 'react';
 import { Icon } from './Icon';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 
 const VARIANTS: Record<Variant, string> = {
   primary: 'bg-brand text-on-brand hover:bg-brand-strong active:bg-brand-strong',
   secondary: 'border border-line bg-surface text-ink hover:bg-gold-soft active:bg-gold-soft',
+  // Brand-red outline: the "Add" button on a menu card.
+  outline: 'border border-brand bg-surface text-brand hover:bg-gold-soft active:bg-gold-soft',
   ghost: 'text-ink hover:bg-gold-soft active:bg-gold-soft',
   // For destructive confirmations only.
   danger: 'bg-danger text-on-brand hover:opacity-90 active:opacity-90',
