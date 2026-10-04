@@ -1,0 +1,86 @@
+@import 'tailwindcss';
+@import './fonts.css';
+
+@theme {
+  /* Only the brand tokens exist: no raw Tailwind palette, so components can't use stray colours. */
+  --color-*: initial;
+
+  /* Brand (from the logo) */
+  --color-brand: #c8323a; /* "BUNTY BIRYANI CENTRE" red: primary actions */
+  --color-brand-strong: #a3242c; /* pressed / hover */
+  --color-on-brand: #ffffff;
+  --color-gold: #c99a2e; /* flat gold from "BBC": borders, icons, badges. Never text, never gradients */
+  --color-gold-soft: #f6e7c1; /* gold-tinted backgrounds */
+  --color-ink: #3a2a1f; /* espresso brown: body text */
+  --color-ink-muted: #6b5646; /* secondary text (≥ 4.5:1 on cream) */
+  --color-sun: #fde68a; /* sun-yellow: header band */
+  --color-cream: #fff8ec; /* page background */
+  --color-surface: #ffffff; /* cards, inputs */
+  --color-line: #eadcc6; /* borders, dividers */
+
+  /* Status (never the brand red for errors) */
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-warning: #8a5300;
+  --color-warning-soft: #fff3d6;
+  --color-success: #1f7a4c;
+  --color-success-soft: #e5f4ec;
+  --color-info: #1f4e79;
+  --color-info-soft: #e8f0f8;
+
+  /* Type */
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Shape */
+  --radius-card: 0.75rem;
+  --radius-control: 0.625rem;
+  --shadow-card: 0 1px 2px rgb(58 42 31 / 0.08);
+  --shadow-bar: 0 -2px 8px rgb(58 42 31 / 0.12);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Gold fails the 3:1 non-text contrast on cream, so focus is ink everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  /* Display type: Archivo 800, uppercase, a little tracking. */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  /* Prices: Inter 600 with tabular figures. */
+  .price {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

@@ -1,0 +1,12 @@
+node_modules
+dist
+src/server/generated
+.env
+.env.*
+!.env.example
+!.env.test
+!.env.e2e
+coverage
+playwright-report
+test-results
+*.tsbuildinfo

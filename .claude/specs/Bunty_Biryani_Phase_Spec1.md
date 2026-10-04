@@ -1,12 +1,5 @@
 # BUNTY BIRYANI CENTER
 # PHASE 1 — REAL DEPLOYED ORDERING MVP
-## Product & Development Specification
-
-Version: 1.2 (supersedes 1.1)
-Changes from 1.1: single-service deployment; phone-verified order lookup; CANCELLED status; address detail field; order abuse limits; soft-delete menu; recurring daily slots; express ETA stored as minutes; item breakdown on dashboard; idempotent order creation; Batch 1 marked complete.
-
----
-
 # 1. PRODUCT UNDERSTANDING
 
 Bunty Biryani Center does NOT need a traditional restaurant website.
