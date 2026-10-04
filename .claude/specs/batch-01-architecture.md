@@ -316,6 +316,7 @@ Constants in `src/shared/limits.ts`. They are validation rules, not business dat
 |---|---|---|
 | `MAX_QTY_PER_ITEM` | 10 | brief §25 |
 | `MAX_LINES_PER_ORDER` | 10 | brief §25 ("cap on lines") |
+| `LOW_STOCK_THRESHOLD` | 5 | MN4: the menu shows "Only N left" at or below this (`onlyLeft`) |
 | `MAX_OPEN_ORDERS_PER_PHONE` | 3 | open (`ORDER_RECEIVED`) orders per phone for today; prank limiter (D7) |
 | `NAME_MIN` / `NAME_MAX` | 2 / 60 | after trimming and collapsing spaces |
 | `ADDRESS_MAX` | 120 | room / hostel / landmark |
@@ -1117,7 +1118,7 @@ The brief's separate CART step is the "Your order" section at the top of `/check
 ### 10.2 State and data
 
 - **Server data:** SWR with a thin `api.ts` wrapper that throws `ApiError { status, code, message, details }`. No global-state library.
-- **Cart:** React context + `useReducer`, persisted to `localStorage` (`bbc.cart.v1`) as `{ businessDate, lines: [{ menuItemId, quantity }] }`. Ids and quantities only; names and prices always come from the latest menu.
+- **Cart:** React context + `useReducer`, persisted to `localStorage` (`bbc.cart.v1`) as `{ businessDate, lines: [{ menuItemId, quantity, name }] }`. **(as built, Batch 3)** `name` is kept only so a notice can name an item that has vanished from the menu ("Raita is no longer available…"); it is never shown as the item's name in the cart and never a price. Prices and live names always come from the latest menu.
 - **Remembered customer details:** `bbc.customer.v1` (`name`, `phone`, `addressDetail`, last `locationId`), so a repeat order is a few taps. A "Not you? Clear" link removes them.
 - **Recent orders:** `bbc.orders.v1`, the last 10 `{ orderNumber, phone, deliveryDate }`, so `/track` and `/order/:orderNumber` work without retyping.
 - Every storage read is wrapped in try/catch and validated with zod; bad or missing data falls back to empty.
