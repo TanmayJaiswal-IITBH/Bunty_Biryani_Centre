@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Built 2026-10-04: lint, typecheck and all 148 tests pass (§12 has the measured numbers). One check is left for the owner: the manual phone checks in §11.3. Deviations found while building are marked **(as built)**. |
+| Status | Built 2026-10-04: lint, typecheck and all 150 tests pass (§12 has the measured numbers). One check is left for the owner: the manual phone checks in §11.3. Deviations found while building are marked **(as built)**. |
 | Depends on | Batch 2 (skeleton, tokens, components) |
 | Brief sections | §2 customer 1–3, §11 pause banner, §12 first steps, §13 Customer menu, §14 sold-out display, §24 |
 | Endpoints | `GET /api/menu` |
@@ -124,7 +124,7 @@ type CartAction =
 
 | Action | Rule |
 |---|---|
-| add | Ignored if the item is sold out. **(as built)** On a line that already exists it behaves like `increment`. A successful add, or any removal, drops the line-cap notice. If the cart already has `MAX_LINES_PER_ORDER` lines: no change, notice "You can order up to 10 different items at once." Stamps `businessDate` on the first add. |
+| add | Ignored if the item is sold out. **(as built)** On a line that already exists it behaves like `increment`. A successful add, or any removal, drops the line-cap notice. If the cart already has `MAX_LINES_PER_ORDER` lines: no change, notice "You can order up to 10 different items at once." Stamps `businessDate` on the first add. **(as built)** If the cart already has lines from another business date (a tab woken after midnight, or a stale tab's cart arriving via `replace`), `add` starts a fresh cart: the stale lines are dropped, today's date is stamped, the item is added at 1 and a `clearedOldDay` notice is raised, so the next reconcile doesn't wipe the new item. |
 | increment | Up to `min(maxQty, MAX_QTY_PER_ITEM)`. |
 | decrement | At 1, removes the line. |
 | clear | After a successful order (Batch 5) or a business-date change. |
@@ -155,7 +155,7 @@ Notices from one reconciliation are shown together in one warning `Banner` at th
 `useMenu()` = SWR on `/api/menu` with `refreshInterval: 60_000`, `revalidateOnFocus: true`, `dedupingInterval: 5_000`, `keepPreviousData: true`.
 
 - If a refresh fails while data is on screen, keep showing the data and let the next interval retry; show the error state only when there is no data at all.
-- A successful refresh triggers reconciliation (§5.4). **(as built)** The trigger is the SWR `onSuccess` of the single `useMenu(onFresh)` call in `MenuPage`, not a `useEffect` on `data`: SWR keeps the same `data` reference when a refresh returns identical JSON, so an effect would not re-run. `onSuccess` only fires for the hook instance that started the request, so there must be exactly one `useMenu` per page; children get the data as props. `menuSwrOptions(onFresh?)` (exported from `use-menu.ts`) leaves `onSuccess` out when there is no callback, because SWR merges configs by object spread and an `onSuccess: undefined` key would override its default no-op.
+- A successful refresh triggers reconciliation (§5.4). **(as built)** The trigger is the SWR `onSuccess` of the single `useMenu(onFresh)` call in `MenuPage`, not a `useEffect` on `data`: SWR keeps the same `data` reference when a refresh returns identical JSON, so an effect would not re-run. `useMenu()` takes no argument: it reads `reconcile` from `useCart()` (it must run under `CartProvider`) and always passes it as `onSuccess`, so every page that calls it (the menu now, `/checkout` in Batch 4) reconciles its cart without extra wiring. SWR's `onSuccess` fires only for the hook instance that started the request, and dedupe makes that a single instance, so each fetch reconciles once however many components call the hook. Reconcile is idempotent for a given menu and doesn't change the menu, so a second instance cannot loop or double the notices. `menuSwrOptions(onFresh?)` (exported from `use-menu.ts`) leaves `onSuccess` out when there is no callback, because SWR merges configs by object spread and an `onSuccess: undefined` key would override its default no-op.
 
 ## 7. States and copy
 
@@ -178,6 +178,7 @@ All strings go in `src/client/copy.ts`.
 - Disabled `+` uses `aria-disabled` plus visible hint text, so screen-reader users hear why.
 - The cart bar's accessible name includes count and total (§4.5).
 - Every interactive element is at least 48×48 px with 8 px between adjacent targets.
+- **(as built)** Focus follows the swap between "Add" and the stepper: after a tap on "Add" focus moves to the stepper's "+", and after "−" removes the last unit it returns to "Add". `ItemCard` sets a `pendingFocus` ref only in its own tap handlers, so a reconcile or another tab's cart never moves focus. `QtyStepper` takes an `incrementRef` prop for this.
 
 ## 9. Performance
 
@@ -243,7 +244,7 @@ Test clock at `2026-10-04T13:00:00Z` (18:30 IST) unless stated.
 - [x] Cart is id + quantity only (plus `name` for notices, §5.1); prices always come from the menu.
 - [x] Unit and integration tests pass.
 - [ ] Manual checks in §11.3 done on a real phone (owner).
-- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass. **(as built)** `pnpm test`: 13 files, 148 tests. `pnpm build`: the `/` entry chunk is 118.97 KB gzipped JS plus 4.63 KB gzipped CSS, inside the 130 KB budget (Batch 1 §10.5).
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass. **(as built)** `pnpm test`: 13 files, 150 tests. `pnpm build`: the `/` entry chunk is 119.12 KB gzipped JS plus 4.65 KB gzipped CSS, inside the 130 KB budget (Batch 1 §10.5).
 - [x] `CLAUDE.md` batch table updated.
 
 ## 13. Files
@@ -268,7 +269,6 @@ pnpm lint && pnpm typecheck
 
 Found in review and left on purpose; none blocks Phase 1. Revisit in Batch 7 polish unless noted.
 
-- The empty-menu branch of `MenuPage` doesn't render `CartNotices`, so a cart emptied by reconciliation when every item is disabled is cleared silently.
 - `ItemCard`'s broken-image flag doesn't reset if the vendor later fixes `imageUrl`, until the card remounts.
 - Sold-out cards keep `text-ink` for name and price; §4.4 asks for `text-ink-muted`.
 - An empty `<ul>` renders when everything is sold out.

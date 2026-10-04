@@ -1,7 +1,7 @@
 import type { PublicMenuItem } from '@shared/api-types.js';
 import { MAX_QTY_PER_ITEM } from '@shared/limits.js';
 import { formatINR } from '@shared/money.js';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../../components/Button';
 import { Icon } from '../../../components/Icon';
 import { QtyStepper } from '../../../components/QtyStepper';
@@ -23,6 +23,21 @@ export function ItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }
   const canIncrement = quantity < item.maxQty;
   const hintId = `max-hint-${item.id}`;
   const showHint = !item.soldOut && quantity > 0 && !canIncrement;
+
+  // Add and the stepper swap places, which unmounts the focused button. Only a tap on this card
+  // sets `pendingFocus`, so a reconcile or another tab's cart never moves focus.
+  const pendingFocus = useRef<'add' | 'increment' | null>(null);
+  const prevQuantity = useRef(quantity);
+  const addRef = useRef<HTMLButtonElement>(null);
+  const incrementRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const target = pendingFocus.current;
+    pendingFocus.current = null;
+    const prev = prevQuantity.current;
+    prevQuantity.current = quantity;
+    if (target === 'increment' && prev === 0 && quantity > 0) incrementRef.current?.focus();
+    else if (target === 'add' && prev > 0 && quantity === 0) addRef.current?.focus();
+  });
 
   return (
     <article className="rounded-card bg-surface p-3 shadow-card">
@@ -69,7 +84,15 @@ export function ItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }
             <span />
           )}
           {quantity === 0 ? (
-            <Button variant="outline" aria-label={m.addLabel(item.name)} onClick={onAdd}>
+            <Button
+              ref={addRef}
+              variant="outline"
+              aria-label={m.addLabel(item.name)}
+              onClick={() => {
+                pendingFocus.current = 'increment';
+                onAdd?.();
+              }}
+            >
               {m.add}
             </Button>
           ) : (
@@ -80,8 +103,10 @@ export function ItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }
                 onIncrement?.();
               }}
               onDecrement={() => {
+                if (quantity <= 1) pendingFocus.current = 'add';
                 onDecrement?.();
               }}
+              incrementRef={incrementRef}
               incrementLabel={m.incrementLabel(item.name)}
               decrementLabel={m.decrementLabel(item.name)}
               hintId={showHint ? hintId : undefined}

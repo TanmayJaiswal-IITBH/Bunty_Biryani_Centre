@@ -31,9 +31,9 @@ function MenuSkeleton() {
 }
 
 export function MenuPage() {
-  const { cart, notices, add, increment, decrement, reconcile, dismissNotices } = useCart();
-  // The only useMenu call on the page: SWR's onSuccess fires for the instance that fetched.
-  const { data, error, mutate } = useMenu(reconcile);
+  const { cart, notices, add, increment, decrement, dismissNotices } = useCart();
+  // Reconciles the cart on every successful fetch (see useMenu).
+  const { data, error, mutate } = useMenu();
 
   const quantities = useMemo(
     () => new Map(cart.lines.map((line) => [line.menuItemId, line.quantity])),
@@ -68,6 +68,7 @@ export function MenuPage() {
     return (
       <CustomerPage subline={subline}>
         {pausedBanner}
+        <CartNotices notices={notices} onDismiss={dismissNotices} />
         <EmptyState title={m.emptyTitle} message={m.emptyMessage} icon="clock" />
       </CustomerPage>
     );

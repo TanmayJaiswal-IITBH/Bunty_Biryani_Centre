@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { Icon } from './Icon';
 
 interface QtyStepperProps {
@@ -9,6 +10,8 @@ interface QtyStepperProps {
   decrementLabel: string;
   /** Id of the element that explains why "+" is disabled (e.g. "Only 2 left"). */
   hintId?: string;
+  /** Lets a parent move focus to "+" after the stepper replaces the "Add" button. */
+  incrementRef?: Ref<HTMLButtonElement>;
 }
 
 const STEP_BUTTON =
@@ -26,6 +29,7 @@ export function QtyStepper({
   incrementLabel,
   decrementLabel,
   hintId,
+  incrementRef,
 }: QtyStepperProps) {
   return (
     <div className="inline-flex items-center gap-2">
@@ -44,6 +48,7 @@ export function QtyStepper({
         {value}
       </output>
       <button
+        ref={incrementRef}
         type="button"
         aria-label={incrementLabel}
         aria-disabled={!canIncrement}

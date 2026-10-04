@@ -1,6 +1,7 @@
 import type { PublicMenu } from '@shared/api-types.js';
 import useSWR, { type SWRConfiguration, type SWRResponse } from 'swr';
 import type { ApiError } from '../../../lib/api';
+import { useCart } from '../cart/CartProvider';
 
 export const MENU_KEY = '/api/menu';
 
@@ -21,10 +22,13 @@ export function menuSwrOptions(
 }
 
 /**
- * Today's menu from the server. Call it once per page: SWR's `onSuccess` only fires for the hook
- * instance that started the request, so children should receive the data as props. `onFresh`
- * (optional) runs after every successful fetch (the cart reconciles against it).
+ * Today's menu from the server; must run under `CartProvider`. Every successful fetch reconciles
+ * the cart (§5.4) through SWR's `onSuccess`, which fires only for the hook instance that started
+ * the request. Dedupe means one instance starts each request, so a fetch reconciles exactly once
+ * however many components call this hook. Reconcile is idempotent for a given menu and never
+ * changes the menu, so a second instance cannot cause a loop or double notices.
  */
-export function useMenu(onFresh?: (menu: PublicMenu) => void): SWRResponse<PublicMenu, ApiError> {
-  return useSWR<PublicMenu, ApiError>(MENU_KEY, menuSwrOptions(onFresh));
+export function useMenu(): SWRResponse<PublicMenu, ApiError> {
+  const { reconcile } = useCart();
+  return useSWR<PublicMenu, ApiError>(MENU_KEY, menuSwrOptions(reconcile));
 }
