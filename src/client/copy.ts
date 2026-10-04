@@ -5,9 +5,6 @@ export const copy = {
   brand: 'Bunty Biryani Centre',
 
   customer: {
-    homeTitle: "Today's menu",
-    homeComingSoon: "Today's menu is on its way. Please check back soon.",
-
     menu: {
       title: "Today's menu",
       subline: (date: string) => `Today's menu · ${date}`,

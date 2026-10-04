@@ -1,9 +1,11 @@
 import { Suspense, lazy } from 'react';
-import { Route, Routes } from 'react-router';
+import { Link, Outlet, Route, Routes } from 'react-router';
 import { CustomerPage } from './components/CustomerPage';
 import { EmptyState } from './components/EmptyState';
 import { Skeleton } from './components/Skeleton';
 import { copy } from './copy';
+import { CartProvider } from './features/customer/cart/CartProvider';
+import { MenuPage } from './features/customer/menu/MenuPage';
 import { NotFound } from './NotFound';
 
 // The admin app is its own chunk: customers never download it.
@@ -18,36 +20,50 @@ function AdminFallback() {
   );
 }
 
+// Batch 4 replaces this placeholder with the real checkout page.
+function CheckoutPlaceholder() {
+  return (
+    <CustomerPage>
+      <EmptyState
+        title={copy.customer.checkout.comingSoon}
+        icon="clock"
+        action={
+          <Link to="/" className="font-semibold text-brand underline underline-offset-2">
+            {copy.common.backToMenu}
+          </Link>
+        }
+      />
+    </CustomerPage>
+  );
+}
+
 export function App() {
   return (
     <Routes>
       <Route
-        path="/"
         element={
-          <CustomerPage>
-            {/* Batch 3 replaces this placeholder with the menu. */}
-            <EmptyState
-              title={copy.customer.homeTitle}
-              message={copy.customer.homeComingSoon}
-              icon="clock"
-            />
-          </CustomerPage>
+          <CartProvider>
+            <Outlet />
+          </CartProvider>
         }
-      />
+      >
+        <Route path="/" element={<MenuPage />} />
+        <Route path="/checkout" element={<CheckoutPlaceholder />} />
+        <Route
+          path="*"
+          element={
+            <CustomerPage>
+              <NotFound />
+            </CustomerPage>
+          }
+        />
+      </Route>
       <Route
         path="/admin/*"
         element={
           <Suspense fallback={<AdminFallback />}>
             <AdminRoutes />
           </Suspense>
-        }
-      />
-      <Route
-        path="*"
-        element={
-          <CustomerPage>
-            <NotFound />
-          </CustomerPage>
         }
       />
     </Routes>
