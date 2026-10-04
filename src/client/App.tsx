@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { Route, Routes } from 'react-router';
-import { AppHeader } from './components/AppHeader';
+import { CustomerPage } from './components/CustomerPage';
 import { EmptyState } from './components/EmptyState';
 import { Skeleton } from './components/Skeleton';
 import { copy } from './copy';
@@ -8,15 +8,6 @@ import { NotFound } from './NotFound';
 
 // The admin app is its own chunk: customers never download it.
 const AdminRoutes = lazy(() => import('./features/admin/AdminRoutes'));
-
-function CustomerPage({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <AppHeader />
-      <main className="mx-auto max-w-120 px-4 py-4">{children}</main>
-    </>
-  );
-}
 
 function AdminFallback() {
   return (
