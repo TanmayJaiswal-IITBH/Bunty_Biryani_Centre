@@ -54,6 +54,27 @@ function tenLines(): CartModel {
 }
 
 describe('cartReducer add / increment / decrement', () => {
+  it('starts a fresh cart when add meets lines from another day', () => {
+    const stale: CartModel = { cart: cartOf([[1, 2]], '2026-10-03'), notices: [] };
+    const next = run(stale, add(7, 5, 'Roll'));
+    expect(next.cart).toEqual({
+      businessDate: DATE,
+      lines: [{ menuItemId: 7, quantity: 1, name: 'Roll' }],
+    });
+    expect(next.notices).toEqual([{ kind: 'clearedOldDay' }]);
+    // The next reconcile for today keeps the freshly added item.
+    const reconciled = cartReducer(next, { type: 'reconcile', menu: menu([menuItem({ id: 7 })]) });
+    expect(reconciled.cart.lines).toEqual([{ menuItemId: 7, quantity: 1, name: 'Item 7' }]);
+  });
+
+  it('leaves a same-day add unchanged', () => {
+    const today: CartModel = { cart: cartOf([[1, 2]]), notices: [] };
+    const next = run(today, add(7));
+    expect(next.cart.lines.map((l) => l.menuItemId)).toEqual([1, 7]);
+    expect(next.cart.businessDate).toBe(DATE);
+    expect(next.notices).toEqual([]);
+  });
+
   it('adds a line, stamps the business date, caps increments and removes at zero', () => {
     const added = run(empty, add(3, 3, 'Biryani'));
     expect(added.cart).toEqual({
@@ -124,15 +145,6 @@ describe('cartReducer add / increment / decrement', () => {
   it('a successful add drops the lineCap notice', () => {
     const m: CartModel = { cart: cartOf([[1, 1]]), notices: [{ kind: 'lineCap' }] };
     expect(cartReducer(m, add(2)).notices).toEqual([]);
-  });
-
-  it('keeps the original business date when adding to a non-empty cart', () => {
-    const m = cartReducer(run(empty, add(1)), {
-      type: 'add',
-      item: { id: 2, name: 'B', maxQty: 5 },
-      businessDate: '2026-10-05',
-    });
-    expect(m.cart.businessDate).toBe(DATE);
   });
 });
 
@@ -269,6 +281,12 @@ describe('cart storage', () => {
     expect(parseStoredCart(s(cartOf([[1, 11]])))).toEqual(EMPTY_CART);
     expect(parseStoredCart(s(cartOf([[1, 1]], null)))).toEqual(EMPTY_CART);
     expect(parseStoredCart(s(cartOf([[1, 1]], 'not-a-date')))).toEqual(EMPTY_CART);
+  });
+
+  it('keeps a long name and rejects an empty one', () => {
+    const long = cartOf([[1, 1, 'x'.repeat(120)]]);
+    expect(parseStoredCart(serializeCart(long))).toEqual(long);
+    expect(parseStoredCart(serializeCart(cartOf([[1, 1, '']])))).toEqual(EMPTY_CART);
   });
 
   it('serializes only businessDate and lines, never notices', () => {

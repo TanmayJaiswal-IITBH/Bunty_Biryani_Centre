@@ -86,6 +86,17 @@ export function cartReducer(model: CartModel, action: CartAction): CartModel {
     case 'add': {
       const { item, businessDate } = action;
       if (item.maxQty <= 0) return model;
+      if (model.cart.lines.length > 0 && model.cart.businessDate !== businessDate) {
+        // Stale lines from another day (a tab woken after midnight, or a stale tab's cart).
+        // Start fresh now, or the next reconcile would wipe the item just added.
+        return {
+          cart: {
+            businessDate,
+            lines: [{ menuItemId: item.id, quantity: 1, name: item.name }],
+          },
+          notices: [...withoutLineCap(model.notices), { kind: 'clearedOldDay' }],
+        };
+      }
       if (model.cart.lines.some((l) => l.menuItemId === item.id)) {
         return increment(model, item.id, item.maxQty);
       }

@@ -10,7 +10,7 @@ interface CartBarProps {
 }
 
 const c = copy.customer.cart;
-const INNER = 'mx-auto flex h-14 max-w-120 items-center justify-between px-4 font-semibold';
+const INNER = 'mx-auto flex h-14 max-w-120 items-center justify-between gap-3 px-4 font-semibold';
 
 /** Sticky bottom bar. While orders are paused it stays visible but is not a link. */
 export function CartBar({ count, subtotal, paused }: CartBarProps) {
@@ -18,7 +18,7 @@ export function CartBar({ count, subtotal, paused }: CartBarProps) {
   const items = c.itemCount(count);
   const total = formatINR(subtotal);
   const summary = (
-    <span className="tabular-nums">
+    <span className="whitespace-nowrap tabular-nums">
       {items} · {total}
     </span>
   );

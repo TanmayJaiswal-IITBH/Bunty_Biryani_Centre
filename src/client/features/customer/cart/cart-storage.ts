@@ -7,7 +7,9 @@ export const CART_STORAGE_KEY = 'bbc.cart.v1';
 const storedLineSchema = z.strictObject({
   menuItemId: z.number().int().positive(),
   quantity: z.number().int().min(1).max(MAX_QTY_PER_ITEM),
-  name: z.string().max(60),
+  // Notice-only text: the server already bounds menu names. No length cap, because zod counts
+  // UTF-16 units and the DB counts code points, so a capped check could drop a valid cart.
+  name: z.string().min(1),
 });
 
 const storedCartSchema = z
