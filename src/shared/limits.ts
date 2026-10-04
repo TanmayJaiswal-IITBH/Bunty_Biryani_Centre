@@ -2,6 +2,8 @@
 
 export const MAX_QTY_PER_ITEM = 10;
 export const MAX_LINES_PER_ORDER = 10;
+/** MN4: show 'Only N left' at or below this. */
+export const LOW_STOCK_THRESHOLD = 5;
 /** Open (ORDER_RECEIVED) orders per phone for today. Prank limiter (Batch 1 D7). */
 export const MAX_OPEN_ORDERS_PER_PHONE = 3;
 
