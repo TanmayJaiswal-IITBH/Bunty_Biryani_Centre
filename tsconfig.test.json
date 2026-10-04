@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "paths": { "@shared/*": ["./src/shared/*"] }
+  },
+  "include": ["tests", "*.config.ts", "src/server", "src/shared", "scripts", "prisma/*.ts"]
+}
