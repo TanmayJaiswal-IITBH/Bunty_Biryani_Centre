@@ -18,7 +18,11 @@ const m = copy.customer.menu;
 
 function MenuSkeleton() {
   return (
-    <div aria-busy="true" aria-label={copy.common.loading} className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3">
+      {/* The skeleton blocks are aria-hidden; screen readers hear this instead. */}
+      <p role="status" className="sr-only">
+        {copy.common.loading}
+      </p>
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className="rounded-card bg-surface p-3 shadow-card">
           <Skeleton className="h-5 w-2/3" />
@@ -33,7 +37,7 @@ function MenuSkeleton() {
 export function MenuPage() {
   const { cart, notices, add, increment, decrement, dismissNotices } = useCart();
   // Reconciles the cart on every successful fetch (see useMenu).
-  const { data, error, mutate } = useMenu();
+  const { data, error, isValidating, mutate } = useMenu();
 
   const quantities = useMemo(
     () => new Map(cart.lines.map((line) => [line.menuItemId, line.quantity])),
@@ -49,6 +53,7 @@ export function MenuPage() {
             title={m.loadErrorTitle}
             message={m.loadErrorMessage}
             onRetry={() => void mutate()}
+            retrying={isValidating}
           />
         ) : (
           <MenuSkeleton />
@@ -87,25 +92,27 @@ export function MenuPage() {
           {m.allSoldOut}
         </Banner>
       ) : null}
-      <ul className="flex flex-col gap-3">
-        {orderable.map((item) => (
-          <li key={item.id}>
-            <ItemCard
-              item={item}
-              quantity={quantities.get(item.id) ?? 0}
-              onAdd={() => {
-                add(item, data.businessDate);
-              }}
-              onIncrement={() => {
-                increment(item);
-              }}
-              onDecrement={() => {
-                decrement(item.id);
-              }}
-            />
-          </li>
-        ))}
-      </ul>
+      {orderable.length > 0 ? (
+        <ul className="flex flex-col gap-3">
+          {orderable.map((item) => (
+            <li key={item.id}>
+              <ItemCard
+                item={item}
+                quantity={quantities.get(item.id) ?? 0}
+                onAdd={() => {
+                  add(item, data.businessDate);
+                }}
+                onIncrement={() => {
+                  increment(item);
+                }}
+                onDecrement={() => {
+                  decrement(item.id);
+                }}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <SoldOutList items={soldOut} />
       <CartBar count={view.count} subtotal={view.subtotal} paused={data.ordersPaused} />
     </CustomerPage>

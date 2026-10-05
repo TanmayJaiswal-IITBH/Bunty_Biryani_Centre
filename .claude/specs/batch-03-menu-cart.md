@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Built 2026-10-04: lint, typecheck and all 150 tests pass (§12 has the measured numbers). One check is left for the owner: the manual phone checks in §11.3. Deviations found while building are marked **(as built)**. |
+| Status | Built 2026-10-04: lint, typecheck and all 150 tests pass (§12 has the measured numbers). Follow-ups 2026-10-05: the six review gaps in §15 are fixed (161 tests) and §11.3 is now a runbook; desktop checks M1–M13 passed in Chrome on 2026-10-05. One check is left for the owner: the phone + TalkBack row in §11.3. Deviations found while building are marked **(as built)**. |
 | Depends on | Batch 2 (skeleton, tokens, components) |
 | Brief sections | §2 customer 1–3, §11 pause banner, §12 first steps, §13 Customer menu, §14 sold-out display, §24 |
 | Endpoints | `GET /api/menu` |
@@ -163,8 +163,8 @@ All strings go in `src/client/copy.ts`.
 
 | State | When | UI | Copy |
 |---|---|---|---|
-| Loading | first load, no data | header + 4 skeleton cards of real card height | — |
-| Error | request failed, no data | `ErrorState` | "Couldn't load today's menu." / "Check your connection and try again." / button "Try again" |
+| Loading | first load, no data | header + 4 skeleton cards of real card height. **(as built)** The blocks are `aria-hidden`; a visually hidden `role="status"` "Loading…" is what screen readers hear | — |
+| Error | request failed, no data | `ErrorState`. **(as built)** "Try again" shows a spinner and is busy while the request is in flight (`retrying={isValidating}`) | "Couldn't load today's menu." / "Check your connection and try again." / button "Try again" |
 | Empty | `items` is empty | `EmptyState` | "Today's menu isn't up yet." / "Please check back soon." |
 | All sold out | every item `soldOut` | info `Banner` above the list | "Everything's sold out for today. See you tomorrow!" |
 | Paused | `ordersPaused` | warning `Banner` under the header; cart bar disabled | "Orders are temporarily paused. Please check again shortly." |
@@ -227,15 +227,41 @@ Test clock at `2026-10-04T13:00:00Z` (18:30 IST) unless stated.
 6. `cartView`: 2 × ₹150 + 1 × ₹130 → `count: 3`, `subtotal: 430`; a line for an unknown id is excluded.
 7. Storage loader: invalid JSON → empty cart; valid JSON with the wrong shape → empty cart; valid data round-trips.
 
-### 11.3 Manual (Chrome device mode 360×740, then a real Android phone)
+### 11.3 Manual runbook (Chrome device mode 360×740, then a real Android phone)
 
-1. Menu loads with skeletons first, then cards; no horizontal scroll at 320, 360 and 412 px.
-2. Add, increment to the limit (hint visible), decrement to remove.
-3. Sold-out items cannot be added.
-4. Refresh the page: cart persists. Second tab: changes sync.
-5. `UPDATE delivery_settings SET orders_paused = true;` → within 60 s (or on refocus) the banner appears and the cart bar is disabled.
-6. Disable an item in the cart via SQL → removed with a notice on the next refresh.
-7. The cart bar never hides the last card; TalkBack reads the stepper and cart bar sensibly.
+**Setup** (PowerShell or bash, from the project root):
+
+```bash
+docker compose up -d --wait   # waits for Postgres to be healthy before seeding
+pnpm db:seed
+pnpm dev                  # open http://localhost:5173, DevTools device mode 360×740
+```
+
+Run every SQL line below in a second terminal as:
+
+```bash
+docker compose exec db psql -U bbc -d bbc_dev -c "<SQL>"
+```
+
+The page picks up database changes within 60 s, or when the tab regains focus (click into the page; at most one focus refresh every 5 s). Cart notices stay only until the next refresh that changes nothing, so read them before clicking away and back again.
+
+| # | Do | Expect |
+|---|---|---|
+| M1 | Network throttling "Slow 4G", reload. Repeat at 320, 360 and 412 px wide | Skeleton cards, then the menu. No horizontal scroll at any width |
+| M2 | `UPDATE menu_items SET daily_stock=3, stock_remaining=3 WHERE name='Veg Biryani';` then, using the keyboard (Tab to Veg Biryani's Add, Enter), add it and press + twice | "Only 3 left" chip. After Add, the focus ring is on +. + stops at 3 with the hint "Only 3 left" under the card. − three times brings back "Add" with the focus ring on it |
+| M3 | Add Chicken Biryani and tap + up to 10 | + stops at 10 with the hint "Max 10 per order" |
+| M4 | With Egg Biryani in the cart: `UPDATE menu_items SET stock_remaining=0 WHERE name='Egg Biryani';` | Egg moves under SOLD OUT with a muted name and price and no Add; notice "Egg Biryani just sold out and was removed from your cart." |
+| M5 | `UPDATE menu_items SET stock_remaining=0;` then, after checking, `UPDATE menu_items SET stock_remaining=daily_stock;` | "Everything's sold out for today. See you tomorrow!" then directly the SOLD OUT list, with no empty list between them (in DevTools › Elements, every `<ul>` in `main` has items; the cart-notices banner has its own list). Then everything is orderable again |
+| M6 | Add two items, reload. Open the site in a second tab and change quantities in each | The cart survives the reload; each tab follows the other's changes |
+| M7 | With items in the cart (the bar only shows then): `UPDATE delivery_settings SET orders_paused=true;` then, after checking, `UPDATE delivery_settings SET orders_paused=false;` | "Orders are temporarily paused. Please check again shortly." The cart bar turns dark with "Orders are paused" and is not a link; Add still works. Both clear after unpausing |
+| M8 | With Paneer Biryani in the cart: `UPDATE menu_items SET is_available=false WHERE name='Paneer Biryani';` | Paneer is gone with "Paneer Biryani is no longer available and was removed from your cart."; Dismiss hides the notice |
+| M9 | `UPDATE menu_items SET image_url='https://example.invalid/x.jpg' WHERE name='Raita';` and check the card. Then, **without reloading**, `UPDATE menu_items SET image_url='/favicon-32.png' WHERE name='Raita';` | First a text-only Raita card; after the second update and a refresh, the 72 px image appears |
+| M10 | DevTools › Application › Local Storage: set `bbc.cart.v1` to `{bad` and reload. Then add an item, edit the stored `businessDate` to yesterday's date and reload | No crash and an empty cart. Then "Your cart from yesterday was cleared." |
+| M11 | (a) DevTools › Network › block request URL `*/api/menu*`, reload. (b) Still blocked, tap "Try again" three times. (c) Unblock it, set throttling to "3G", click into the page and tap "Try again" if it is not already loading | (a) "Couldn't load today's menu." (b) Each tap adds a blocked `/api/menu` row in the Network panel and the button is enabled again straight away (the spinner may be too brief to see). (c) The button shows a spinner and is busy until the menu appears; clicking into the page may start the reload by itself (SWR refreshes on focus), which is fine |
+| M12 | Open `/checkout` and `/nope`; inspect "Back to the menu" | The link box is at least 48 px tall |
+| M13 | Add items, scroll to the very bottom | The cart bar never covers the last card |
+| Phone | `pnpm dev:server` in one terminal and `pnpm exec vite --host` in another (allow Node through Windows Defender Firewall for Private networks when asked); open `http://<PC-LAN-IP>:5173` (IPv4 from `ipconfig`) on the phone. Repeat M1, M2 and M6 by touch, then with TalkBack on build a cart of 2 Chicken Biryani + 1 Veg Biryani | Touch: as M1, M2 and M6. TalkBack reads "Add Chicken Biryani", "Add one more Chicken Biryani", the quantity, and the cart bar as "Checkout, 3 items, ₹410" |
+| Reset | `pnpm db:seed`, then `UPDATE delivery_settings SET orders_paused=false;` | Sample menu restored. The seed does not touch `orders_paused`, so the second command is required |
 
 ## 12. Definition of done
 
@@ -244,7 +270,7 @@ Test clock at `2026-10-04T13:00:00Z` (18:30 IST) unless stated.
 - [x] Cart is id + quantity only (plus `name` for notices, §5.1); prices always come from the menu.
 - [x] Unit and integration tests pass.
 - [ ] Manual checks in §11.3 done on a real phone (owner).
-- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass. **(as built)** `pnpm test`: 13 files, 150 tests. `pnpm build`: the `/` entry chunk is 119.12 KB gzipped JS plus 4.65 KB gzipped CSS, inside the 130 KB budget (Batch 1 §10.5).
+- [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass. **(as built)** `pnpm test`: 13 files, 150 tests; after the §15 follow-ups, 14 files, 161 tests. `pnpm build`: the `/` entry chunk is 119.12 KB gzipped JS (119.21 KB after the follow-ups) plus 4.65 KB gzipped CSS, inside the 130 KB budget (Batch 1 §10.5).
 - [x] `CLAUDE.md` batch table updated.
 
 ## 13. Files
@@ -253,7 +279,7 @@ Test clock at `2026-10-04T13:00:00Z` (18:30 IST) unless stated.
 - Shared: `src/shared/schemas/menu.ts`, `src/shared/pricing.ts`, additions to `src/shared/api-types.ts`.
 - Client: `src/client/features/customer/menu/{MenuPage,ItemCard,SoldOutList,use-menu}.tsx`, `src/client/features/customer/cart/{cart-reducer,cart-storage,CartProvider,CartBar}.ts(x)`, `src/client/components/QtyStepper.tsx`, additions to `src/client/copy.ts`, `/checkout` placeholder route.
 - Tests: `tests/integration/menu.test.ts`, `tests/unit/cart.test.ts`.
-- **(as built) Also created:** `src/client/features/customer/cart/CartNotices.tsx`, `src/client/lib/storage.ts`, `src/client/components/CustomerPage.tsx`, `tests/unit/use-menu.test.ts`, `tests/unit/pricing.test.ts`, `tests/unit/menu-schema.test.ts`. `use-menu.ts` also exports `menuSwrOptions`, and the Batch 2 `Button` gained `outline`.
+- **(as built) Also created:** `src/client/features/customer/cart/CartNotices.tsx`, `src/client/lib/storage.ts`, `src/client/components/CustomerPage.tsx`, `tests/unit/use-menu.test.ts`, `tests/unit/pricing.test.ts`, `tests/unit/menu-schema.test.ts`. `use-menu.ts` also exports `menuSwrOptions`, and the Batch 2 `Button` gained `outline`. The §15 follow-ups added `src/client/components/BackToMenuLink.tsx` and `tests/unit/menu-markup.test.ts` (static markup via `react-dom/server`, no DOM), and gave `ErrorState` a `retrying` prop.
 - **(as built) Convention:** callback props use property syntax (`onX: () => void`, not method syntax) because of the `@typescript-eslint/unbound-method` lint rule.
 
 ## 14. Commands
@@ -267,11 +293,17 @@ pnpm lint && pnpm typecheck
 
 ## 15. Known gaps / deferred polish
 
-Found in review and left on purpose; none blocks Phase 1. Revisit in Batch 7 polish unless noted.
+Six gaps were found in review and deferred. All six were fixed on 2026-10-05 (branch `batch-3-followups`). Tests in `tests/unit/menu-markup.test.ts` pin them, except for the image recovery (manual check M9) and the use of `BackToMenuLink` on the two pages (M12):
 
-- `ItemCard`'s broken-image flag doesn't reset if the vendor later fixes `imageUrl`, until the card remounts.
-- Sold-out cards keep `text-ink` for name and price; §4.4 asks for `text-ink-muted`.
-- An empty `<ul>` renders when everything is sold out.
-- `MenuSkeleton` puts an `aria-label` on a generic `div`.
-- The "Try again" button gives no visible feedback while it revalidates.
-- The `/checkout` placeholder's back link is under 48 px; Batch 4 replaces the page.
+- **Broken image:** `ItemCard` remembers which URL failed (`failedSrc`), not just that one did, so a fixed `imageUrl` shows again on the next refresh.
+- **Sold-out text:** sold-out cards use `text-ink-muted` for name and price (§4.4).
+- **Empty list:** no empty `<ul>` renders when everything is sold out.
+- **Skeleton label:** `MenuSkeleton` no longer puts `aria-label` on a generic `div`; a visually hidden `role="status"` reads "Loading…".
+- **Retry feedback:** "Try again" shows a spinner and is busy while it revalidates (`ErrorState retrying`).
+- **Back link:** "Back to the menu" on `/checkout` and the not-found page is the shared 48 px `BackToMenuLink`.
+
+Still open, found in the follow-up review; revisit in Batch 7 polish:
+
+- While a retry is in flight "Try again" is natively `disabled`, and SWR's automatic error retries flip `isValidating` too. A keyboard user resting on the button can lose focus. Fix: keep it focusable while busy (`aria-disabled`, as `QtyStepper` does) or restore focus afterwards.
+- `fetcher` has no request timeout, so a hung request keeps "Try again" busy until the browser gives up. Fix: `AbortSignal.timeout(15_000)` in `fetcher` (`api()` already maps a timeout to `NETWORK_ERROR`).
+- `MenuPage` now subscribes to `isValidating`, so every refresh re-renders the menu twice. This is negligible at this menu size.
