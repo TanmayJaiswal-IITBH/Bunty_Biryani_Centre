@@ -392,8 +392,9 @@ Usage rules:
 | `TextField` | label always visible, optional hint, error with icon (`aria-describedby`, `aria-invalid`); passes `inputMode`, `autoComplete` |
 | `Banner` | `info`, `warning`, `danger`, `success`; icon + text + optional action; `role="status"` (or `role="alert"` for danger) |
 | `Skeleton` | grey-cream blocks with a subtle pulse (none under reduced motion) |
-| `ErrorState` | icon, title, message, "Try again" button |
+| `ErrorState` | icon, title, message, "Try again" button **(as built, Batch 3 follow-ups)** that shows a spinner and is busy while `retrying` (pass SWR's `isValidating`) |
 | `EmptyState` | icon, title, message, optional action |
+| `BackToMenuLink` | **(as built, Batch 3 follow-ups)** the 48 px "Back to the menu" link used as the action on the not-found and `/checkout` placeholder pages |
 | `Icon` set | inline SVG React components: `alert`, `info`, `check`, `x`, `plus`, `minus`, `phone`, `clock`, `map-pin`, `cart`, `chevron-right`, `bolt`, `truck`, `eye`, `eye-off`. No icon library |
 | `AppHeader` | sun-yellow band, logo, "BUNTY BIRYANI CENTRE" (Archivo); used by customer pages **(as built, Batch 3)** renders the page `<h1>` (logo + brand name, linked to `/`), takes an optional `subline` (e.g. "Today's menu · Sun, 4 Oct"), and the logo has `alt=""` because the brand text beside it is the name. New `CustomerPage` (`components/CustomerPage.tsx`) wraps `AppHeader` and the centred `main`; `reserveCartBar` adds bottom padding `calc(5.5rem + env(safe-area-inset-bottom))` so the sticky cart bar never covers the last card |
 | `AdminShell` | §7.4 |

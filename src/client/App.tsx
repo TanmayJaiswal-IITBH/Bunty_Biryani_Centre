@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
-import { Link, Outlet, Route, Routes } from 'react-router';
+import { Outlet, Route, Routes } from 'react-router';
+import { BackToMenuLink } from './components/BackToMenuLink';
 import { CustomerPage } from './components/CustomerPage';
 import { EmptyState } from './components/EmptyState';
 import { Skeleton } from './components/Skeleton';
@@ -27,11 +28,7 @@ function CheckoutPlaceholder() {
       <EmptyState
         title={copy.customer.checkout.comingSoon}
         icon="clock"
-        action={
-          <Link to="/" className="font-semibold text-brand underline underline-offset-2">
-            {copy.common.backToMenu}
-          </Link>
-        }
+        action={<BackToMenuLink />}
       />
     </CustomerPage>
   );

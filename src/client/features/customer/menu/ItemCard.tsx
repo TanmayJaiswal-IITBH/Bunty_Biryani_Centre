@@ -19,10 +19,13 @@ interface ItemCardProps {
 const m = copy.customer.menu;
 
 export function ItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }: ItemCardProps) {
-  const [imageFailed, setImageFailed] = useState(false);
+  // Remember which URL failed, not just that one did, so a fixed `imageUrl` shows again.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const canIncrement = quantity < item.maxQty;
   const hintId = `max-hint-${item.id}`;
   const showHint = !item.soldOut && quantity > 0 && !canIncrement;
+  // Sold-out text is muted with a colour token, not opacity, so it keeps ≥ 4.5:1 contrast (§4.4).
+  const muted = item.soldOut ? 'text-ink-muted' : '';
 
   // Add and the stepper swap places, which unmounts the focused button. Only a tap on this card
   // sets `pendingFocus`, so a reconcile or another tab's cart never moves focus.
@@ -42,7 +45,7 @@ export function ItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }
   return (
     <article className="rounded-card bg-surface p-3 shadow-card">
       <div className="flex gap-3">
-        {item.imageUrl && !item.soldOut && !imageFailed ? (
+        {item.imageUrl && !item.soldOut && item.imageUrl !== failedSrc ? (
           <img
             src={item.imageUrl}
             alt=""
@@ -51,15 +54,17 @@ export function ItemCard({ item, quantity = 0, onAdd, onIncrement, onDecrement }
             loading="lazy"
             decoding="async"
             onError={() => {
-              setImageFailed(true);
+              setFailedSrc(item.imageUrl);
             }}
             className="size-18 shrink-0 rounded-control object-cover"
           />
         ) : null}
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="min-w-0 text-base font-semibold wrap-break-word">{item.name}</h3>
-            <span className="price shrink-0">{formatINR(item.price)}</span>
+            <h3 className={`min-w-0 text-base font-semibold wrap-break-word ${muted}`}>
+              {item.name}
+            </h3>
+            <span className={`price shrink-0 ${muted}`}>{formatINR(item.price)}</span>
           </div>
           {item.description ? (
             <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{item.description}</p>
