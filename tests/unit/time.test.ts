@@ -7,6 +7,7 @@ import {
   formatTime12h,
   formatWindow,
   isValidHHmm,
+  minutesBetween,
   nowIST,
 } from '../../src/shared/time';
 
@@ -86,5 +87,10 @@ describe('small helpers', () => {
   it('formats a business date without depending on the locale', () => {
     expect(formatBusinessDate('2026-10-04')).toBe('Sun, 4 Oct');
     expect(formatBusinessDate('2026-01-01')).toBe('Thu, 1 Jan');
+  });
+  it('measures minutes between two HH:mm times, negative when the second is earlier', () => {
+    expect(minutesBetween('19:10', '19:30')).toBe(20);
+    expect(minutesBetween('20:00', '19:30')).toBe(-30);
+    expect(minutesBetween('00:00', '23:59')).toBe(1439);
   });
 });

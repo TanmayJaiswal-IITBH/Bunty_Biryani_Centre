@@ -389,13 +389,14 @@ Usage rules:
 | Component | Notes |
 |---|---|
 | `Button` | variants `primary`, `secondary` (surface + line border), **(as built, Batch 3)** `outline` (1px `border-brand`, `bg-surface text-brand`, hover `bg-gold-soft` like `secondary`; the menu's "Add" button), `ghost`, `danger` (danger colour, for destructive confirms only); `loading` prop shows a spinner and sets `aria-busy`; `fullWidth` |
-| `TextField` | label always visible, optional hint, error with icon (`aria-describedby`, `aria-invalid`); passes `inputMode`, `autoComplete` |
-| `Banner` | `info`, `warning`, `danger`, `success`; icon + text + optional action; `role="status"` (or `role="alert"` for danger) |
+| `TextField` | label always visible, optional hint, error with icon (`aria-describedby`, `aria-invalid`); passes `inputMode`, `autoComplete`. **(as built, Batch 4)** an optional `counter` (e.g. `101/120`, muted and right-aligned under the field, linked by `aria-describedby`), and `aria-describedby` no longer points at a hint that is hidden because an error shows (an existing bug). It also exports a small `FieldError` (icon + `text-danger` message) that the checkout reuses for its choice-section errors |
+| `RadioCard` | **(as built, Batch 4)** a real `<input type="radio">` restyled as a bordered card (`min-h-12`): `title`, optional `lines`, optional right-aligned `aside` that never wraps (a fee or a cutoff hint), optional `reason`, an `errorId` to announce a group error, and an `inputRef`. A disabled card is `aria-disabled` (never `disabled`) and stays focusable, with the reason linked by `aria-describedby`. Used by the checkout's method and where-and-when choices |
+| `Banner` | `info`, `warning`, `danger`, `success`; icon + text + optional action; `role="status"` (or `role="alert"` for danger); **(as built, Batch 4)** an optional `role` prop overrides it (the checkout's paused banner is `role="alert"`) |
 | `Skeleton` | grey-cream blocks with a subtle pulse (none under reduced motion) |
 | `ErrorState` | icon, title, message, "Try again" button **(as built, Batch 3 follow-ups)** that shows a spinner and is busy while `retrying` (pass SWR's `isValidating`) |
 | `EmptyState` | icon, title, message, optional action |
-| `BackToMenuLink` | **(as built, Batch 3 follow-ups)** the 48 px "Back to the menu" link used as the action on the not-found and `/checkout` placeholder pages |
-| `Icon` set | inline SVG React components: `alert`, `info`, `check`, `x`, `plus`, `minus`, `phone`, `clock`, `map-pin`, `cart`, `chevron-right`, `bolt`, `truck`, `eye`, `eye-off`. No icon library |
+| `BackToMenuLink` | **(as built, Batch 3 follow-ups)** the 48 px "Back to the menu" link used as the action on the not-found page (the `/checkout` placeholder it also served was replaced by the real checkout page in Batch 4) |
+| `Icon` set | inline SVG React components: `alert`, `info`, `check`, `x`, `plus`, `minus`, `phone`, `clock`, `map-pin`, `cart`, `chevron-right`, `chevron-left` (Batch 4), `bolt`, `truck`, `eye`, `eye-off`. No icon library |
 | `AppHeader` | sun-yellow band, logo, "BUNTY BIRYANI CENTRE" (Archivo); used by customer pages **(as built, Batch 3)** renders the page `<h1>` (logo + brand name, linked to `/`), takes an optional `subline` (e.g. "Today's menu · Sun, 4 Oct"), and the logo has `alt=""` because the brand text beside it is the name. New `CustomerPage` (`components/CustomerPage.tsx`) wraps `AppHeader` and the centred `main`; `reserveCartBar` adds bottom padding `calc(5.5rem + env(safe-area-inset-bottom))` so the sticky cart bar never covers the last card |
 | `AdminShell` | §7.4 |
 

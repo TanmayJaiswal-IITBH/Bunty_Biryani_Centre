@@ -304,7 +304,7 @@ Payment status (brief §3):
 ### 6.10 Payment (COD)
 
 - **C1.** `paymentMethod` is always `COD` in Phase 1. It is an enum so Phase 2 can add `ONLINE`.
-- **C2.** The customer sees **"Payment: Cash on delivery"**. After the vendor marks it collected, the lookup page shows "Cash on delivery · Collected".
+- **C2.** The customer sees **"Payment: CASH ON DELIVERY"** (the brief's wording, uppercase; **(as built, Batch 4)** aligned from "Cash on delivery"). After the vendor marks it collected, the lookup page shows "Cash on delivery · Collected".
 - **C3.** The vendor sees **"COD · Pending"** or **"COD · Collected"**.
 - **C4.** No screen, API field or log line ever says "paid" for an order whose cash has not been collected.
 
@@ -834,9 +834,9 @@ Items are those in MN1, orderable first, then sold out (MN2). `maxQty = soldOut 
 }
 ```
 
-- Slots: active slots at active locations, sorted by `deliveryTime` then location `sortOrder`. `isOpen` per B3, ignoring `ordersPaused` (the top-level flag covers that). `closedReason`: `CUTOFF_PASSED` or `CLOSED_TODAY`.
+- Slots: active slots at active locations, sorted by `deliveryTime`, then location `sortOrder`, then slot `id` **(as built, Batch 4: the `id` tie-break keeps the order stable when two slots share a time and sort order)**. `isOpen` per B3, ignoring `ordersPaused` (the top-level flag covers that). `closedReason`: `CUTOFF_PASSED` or `CLOSED_TODAY`.
 - `express.available` per E1 ignoring `ordersPaused`; `unavailableReason`: `DISABLED` or `OUTSIDE_HOURS`.
-- `express.locations`: active locations by `sortOrder`.
+- `express.locations`: active locations by `sortOrder`, then `id` **(as built, Batch 4)**.
 
 #### `POST /api/orders`
 
@@ -1119,7 +1119,7 @@ The brief's separate CART step is the "Your order" section at the top of `/check
 
 - **Server data:** SWR with a thin `api.ts` wrapper that throws `ApiError { status, code, message, details }`. No global-state library.
 - **Cart:** React context + `useReducer`, persisted to `localStorage` (`bbc.cart.v1`) as `{ businessDate, lines: [{ menuItemId, quantity, name }] }`. **(as built, Batch 3)** `name` is kept only so a notice can name an item that has vanished from the menu ("Raita is no longer available…"); it is never shown as the item's name in the cart and never a price. Prices and live names always come from the latest menu.
-- **Remembered customer details:** `bbc.customer.v1` (`name`, `phone`, `addressDetail`, last `locationId`), so a repeat order is a few taps. A "Not you? Clear" link removes them.
+- **Remembered customer details:** `bbc.customer.v1` `{ customerName, customerPhone, addressDetail, deliveryMode, locationId }` (**(as built, Batch 4)** the field names match `createOrderSchema`; the last delivery mode and location are remembered, not the slot), so a repeat order is a few taps. A "Not you? Clear details" link removes them. Batch 5 writes it after a successful order; Batch 4 only reads it.
 - **Recent orders:** `bbc.orders.v1`, the last 10 `{ orderNumber, phone, deliveryDate }`, so `/track` and `/order/:orderNumber` work without retyping.
 - Every storage read is wrapped in try/catch and validated with zod; bad or missing data falls back to empty.
 

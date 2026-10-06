@@ -1,56 +1,42 @@
-// Static-markup checks for the customer menu (Batch 3 §15 follow-ups). No DOM: components render
-// with react-dom/server in the node unit project, and SWR serves its `fallback` without fetching.
-import { createElement as h, type ReactElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router';
+// Static-markup checks for the customer menu (Batch 3 §15 follow-ups); helpers in tests/helpers/markup.
+import { createElement as h } from 'react';
 import { SWRConfig } from 'swr';
 import { describe, expect, it } from 'vitest';
-import type { PublicMenu, PublicMenuItem } from '../../src/shared/api-types';
+import type { InitialEntry } from 'react-router';
+import type { DeliveryOptions, PublicMenu } from '../../src/shared/api-types';
 import { BackToMenuLink } from '../../src/client/components/BackToMenuLink';
 import { ErrorState } from '../../src/client/components/ErrorState';
 import { copy } from '../../src/client/copy';
+import { CART_STORAGE_KEY } from '../../src/client/features/customer/cart/cart-storage';
 import { CartProvider } from '../../src/client/features/customer/cart/CartProvider';
+import { CART_EMPTY_STATE } from '../../src/client/features/customer/cart/cart-empty';
+import { DELIVERY_OPTIONS_KEY } from '../../src/client/features/customer/checkout/use-delivery-options';
+import { deliverySummaryText } from '../../src/client/features/customer/menu/delivery-summary';
 import { ItemCard } from '../../src/client/features/customer/menu/ItemCard';
 import { MenuPage } from '../../src/client/features/customer/menu/MenuPage';
 import { MENU_KEY } from '../../src/client/features/customer/menu/use-menu';
+import { opts } from '../helpers/delivery-fixtures';
+import { classesOf, escaped, item, render, withWindowStorage } from '../helpers/markup';
 
-function item(over: Partial<PublicMenuItem> = {}): PublicMenuItem {
-  return {
-    id: 1,
-    name: 'Chicken Biryani',
-    description: null,
-    price: 150,
-    imageUrl: null,
-    soldOut: false,
-    maxQty: 10,
-    onlyLeft: null,
-    ...over,
+interface MenuPageExtras {
+  /** Seeds the delivery-options SWR cache; omitted means the fetch is still pending. */
+  delivery?: DeliveryOptions;
+  initialEntries?: InitialEntry[];
+}
+
+function renderMenuPage(menu?: PublicMenu, extras: MenuPageExtras = {}): string {
+  const fallback = {
+    ...(menu ? { [MENU_KEY]: menu } : {}),
+    ...(extras.delivery ? { [DELIVERY_OPTIONS_KEY]: { ...extras.delivery, receivedAt: 0 } } : {}),
   };
-}
-
-function render(el: ReactElement): string {
-  return renderToStaticMarkup(h(MemoryRouter, null, el));
-}
-
-function renderMenuPage(menu?: PublicMenu): string {
-  const value = { provider: () => new Map(), ...(menu ? { fallback: { [MENU_KEY]: menu } } : {}) };
-  return render(h(SWRConfig, { value }, h(CartProvider, null, h(MenuPage))));
+  const value = { provider: () => new Map(), fallback };
+  return render(h(SWRConfig, { value }, h(CartProvider, null, h(MenuPage))), extras.initialEntries);
 }
 
 /** MenuPage with SWR's cache entry for the menu seeded directly (e.g. a failed fetch). */
 function renderMenuPageFromCache(state: { error: Error; isValidating: boolean }): string {
   const value = { provider: () => new Map<string, object>([[MENU_KEY, state]]) };
   return render(h(SWRConfig, { value }, h(CartProvider, null, h(MenuPage))));
-}
-
-/** React escapes apostrophes in static markup. */
-const escaped = (text: string) => text.replace(/'/g, '&#x27;');
-
-/** The class tokens of the first opening tag `openTag` matches (its one capture group). */
-function classesOf(html: string, openTag: RegExp): string[] {
-  const match = openTag.exec(html);
-  if (!match?.[1]) throw new Error(`no tag matching ${String(openTag)}`);
-  return match[1].split(' ');
 }
 
 const H3 = /<h3 class="([^"]*)"/;
@@ -129,6 +115,65 @@ describe('MenuPage', () => {
     expect(html).toMatch(/role="status"[^>]*>Loading…</);
     expect(html).not.toContain('aria-label="Loading…"');
     expect(html).not.toContain('aria-busy');
+  });
+});
+
+describe('MenuPage delivery summary', () => {
+  const menu: PublicMenu = {
+    businessDate: '2026-10-04',
+    ordersPaused: false,
+    items: [item()],
+  };
+  const noItems: PublicMenu = { ...menu, items: [] };
+
+  it('shows the delivery summary once the options are loaded', () => {
+    const html = renderMenuPage(menu, { delivery: opts() });
+    expect(html).toContain(deliverySummaryText(opts()));
+  });
+
+  it('shows the summary on a menu with no items too', () => {
+    const html = renderMenuPage(noItems, { delivery: opts() });
+    expect(html).toContain(deliverySummaryText(opts()));
+  });
+
+  it('hides the summary while the options have not loaded; the menu does not wait', () => {
+    const html = renderMenuPage(menu);
+    expect(html).not.toContain('Batch:');
+    expect(html).toContain('Chicken Biryani');
+  });
+});
+
+describe('MenuPage empty-cart notice', () => {
+  const menu: PublicMenu = {
+    businessDate: '2026-10-04',
+    ordersPaused: false,
+    items: [item()],
+  };
+  const entries: InitialEntry[] = [{ pathname: '/', state: CART_EMPTY_STATE }];
+
+  it('shows "Your cart is empty." when checkout redirected back with an empty cart', () => {
+    const html = renderMenuPage(menu, { initialEntries: entries });
+    expect(html).toContain(copy.customer.checkout.cartEmpty);
+  });
+
+  it('shows it on a menu with no items too', () => {
+    const html = renderMenuPage({ ...menu, items: [] }, { initialEntries: entries });
+    expect(html).toContain(copy.customer.checkout.cartEmpty);
+  });
+
+  it('does not show it without the redirect state', () => {
+    expect(renderMenuPage(menu)).not.toContain(copy.customer.checkout.cartEmpty);
+  });
+
+  it('does not show it once the cart has lines', () => {
+    const cart = JSON.stringify({
+      businessDate: '2026-10-04',
+      lines: [{ menuItemId: 1, quantity: 1, name: 'Chicken Biryani' }],
+    });
+    const html = withWindowStorage({ local: { [CART_STORAGE_KEY]: cart } }, () =>
+      renderMenuPage(menu, { initialEntries: entries }),
+    );
+    expect(html).not.toContain(copy.customer.checkout.cartEmpty);
   });
 });
 

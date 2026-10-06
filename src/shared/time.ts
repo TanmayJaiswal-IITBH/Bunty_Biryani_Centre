@@ -53,6 +53,15 @@ export function addMinutesIST(instant: Date, minutes: number): string {
   return istParts(new Date(instant.getTime() + minutes * 60_000)).time;
 }
 
+/** Minutes from `from` to `to` (both `HH:mm`, same day); negative when `to` is earlier. */
+export function minutesBetween(from: string, to: string): number {
+  const toMinutes = (hhmm: string): number => {
+    const [h = 0, m = 0] = hhmm.split(':').map(Number);
+    return h * 60 + m;
+  };
+  return toMinutes(to) - toMinutes(from);
+}
+
 function split12h(hhmm: string): { text: string; meridiem: 'AM' | 'PM' } {
   const [hStr = '0', mStr = '00'] = hhmm.split(':');
   const h = Number(hStr);
