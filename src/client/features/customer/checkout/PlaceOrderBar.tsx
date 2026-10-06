@@ -10,7 +10,10 @@ export function isTextEntry(target: EventTarget | null): boolean {
 }
 
 interface PlaceOrderBarProps {
-  /** Hidden while a text field has focus, so the bar never sits over it (§5.8). */
+  /**
+   * Hidden while a text field has focus, so the bar never sits over it (§5.8), and while the
+   * in-form Place order button is fully on screen, so the two never show together.
+   */
   hidden: boolean;
   disabled: boolean;
   label: string;

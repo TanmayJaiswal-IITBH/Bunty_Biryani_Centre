@@ -1,6 +1,7 @@
 import { formatINR } from '@shared/money.js';
 import type { Totals } from '@shared/pricing.js';
 import { formatTime12h } from '@shared/time.js';
+import type { Ref } from 'react';
 import { Banner } from '../../../components/Banner';
 import { Button } from '../../../components/Button';
 import { copy } from '../../../copy';
@@ -37,6 +38,8 @@ interface SummarySectionProps {
   notSent: boolean;
   submitDisabled: boolean;
   submitLabel: string;
+  /** Lets the page hide the sticky bar while this button is on screen. */
+  submitRef?: Ref<HTMLButtonElement>;
 }
 
 /** Summary (§5.7): totals, where it goes, cash on delivery, and the in-flow Place order. */
@@ -47,6 +50,7 @@ export function SummarySection({
   notSent,
   submitDisabled,
   submitLabel,
+  submitRef,
 }: SummarySectionProps) {
   const mode = resolved?.mode ?? null;
   const line = deliveryLine(resolved, expressEta);
@@ -72,7 +76,13 @@ export function SummarySection({
           {c.notSent}
         </Banner>
       ) : null}
-      <Button type="submit" fullWidth disabled={submitDisabled} className="mt-4 min-h-14">
+      <Button
+        ref={submitRef}
+        type="submit"
+        fullWidth
+        disabled={submitDisabled}
+        className="mt-4 min-h-14"
+      >
         {submitLabel}
       </Button>
     </section>

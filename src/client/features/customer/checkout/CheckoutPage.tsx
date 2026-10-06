@@ -11,6 +11,7 @@ import { Skeleton } from '../../../components/Skeleton';
 import { copy } from '../../../copy';
 import { readStorage, removeStorage, writeStorage } from '../../../lib/storage';
 import { useElapsedMinutes } from '../../../lib/use-elapsed-minutes';
+import { useInView } from '../../../lib/use-in-view';
 import { CART_EMPTY_STATE } from '../cart/cart-empty';
 import { cartView } from '../cart/cart-reducer';
 import { useCart } from '../cart/CartProvider';
@@ -134,6 +135,10 @@ function CheckoutForm({
   const [dirty, setDirty] = useState<ReadonlySet<DetailField>>(() => new Set());
   const [typing, setTyping] = useState(false);
   const [notSent, setNotSent] = useState(false);
+  // The in-form Place order button. While it is fully on screen the sticky bar steps aside, so
+  // the end of the page shows one button, not two.
+  const [inFormSubmit, setInFormSubmit] = useState<HTMLButtonElement | null>(null);
+  const inFormSubmitVisible = useInView(inFormSubmit);
   // Set only by a tap (submit with errors, Try Express); the effect below consumes it.
   const pendingFocus = useRef<PendingFocus | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -352,9 +357,10 @@ function CheckoutForm({
           notSent={notSent}
           submitDisabled={disabled}
           submitLabel={label}
+          submitRef={setInFormSubmit}
         />
       </form>
-      <PlaceOrderBar hidden={typing} disabled={disabled} label={label} />
+      <PlaceOrderBar hidden={typing || inFormSubmitVisible} disabled={disabled} label={label} />
     </>
   );
 }

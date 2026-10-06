@@ -199,7 +199,7 @@ Two `RadioCard`s in a `fieldset` (legend "Delivery method"), with the brief §4 
 
 - Sticky at the bottom, full width, brand red, 56 px + safe area: "Place order · ₹350".
 - **Disabled** only when: orders are paused ("Orders are paused"), delivery options haven't loaded, or nothing is available. Validation problems do **not** disable it: tapping shows every error, focuses the first invalid field and scrolls it to the centre.
-- **Keyboard:** while a text input has focus, the sticky button is hidden (focusin/focusout on the form), because on Android Chrome a fixed bottom bar otherwise sits over the field being typed in. The summary and a non-sticky copy of the button stay at the end of the form.
+- **Keyboard:** while a text input has focus, the sticky button is hidden (focusin/focusout on the form), because on Android Chrome a fixed bottom bar otherwise sits over the field being typed in. The summary and a non-sticky copy of the button stay at the end of the form. **(as built, after the phone check)** The sticky bar also hides while that in-form copy is fully on screen (`useInView`, an IntersectionObserver in `lib/use-in-view.ts`), so scrolled to the end of the page there is one Place order button, not two stacked ones.
 - This batch: a valid tap calls `buildOrderRequest()` and stops. Batch 5 sends it. **(as built)** A valid tap shows an info banner (`copy.customer.checkout.notSent`) so the manual checks can see it worked, and sends nothing. `PLACEHOLDER_REQUEST_ID = '00000000-0000-4000-8000-000000000000'` (a valid v4 shape) stands in for `clientRequestId`. Batch 5 replaces both.
 
 ## 6. Data and refresh
@@ -379,7 +379,7 @@ UPDATE delivery_slots SET cutoff_time = to_char((now() AT TIME ZONE 'Asia/Kolkat
 - [x] Checkout page implements §5–§10 with copy in `copy.ts`; brief §4 copy is verbatim.
 - [x] `createOrderSchema` is final and shared.
 - [x] Unit and integration tests in §13.1–§13.4 pass.
-- [ ] Manual runbook K1–K14 (§13.5) passes on desktop, and the phone row is done (owner).
+- [x] Manual runbook K1–K13 (§13.5) passes on desktop. **(as built)** K14 and the phone row moved to Batch 7 §13 (M6) on 2026-10-06.
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` pass. **(as built)** `pnpm test`: 20 files, 284 tests (Batch 3 ended at 14 files, 161 tests). `pnpm build`: the `/` entry chunk is 127.34 KB gzipped JS plus 5.15 KB gzipped CSS, inside the 130 KB budget (Batch 1 §10.5); it was 119.21 KB before Batch 4. No lazy loading was needed yet, but Batch 5 will likely need the lazy-load-the-checkout-route remedy (Batch 7 §6.2, fix 3). `dist/client` contains no `style="` attribute (CSP `style-src 'self'`).
 - [x] `CLAUDE.md` batch table updated.
 

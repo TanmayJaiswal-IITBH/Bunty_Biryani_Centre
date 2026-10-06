@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Built 2026-10-04: lint, typecheck and all 150 tests pass (§12 has the measured numbers). Follow-ups 2026-10-05: the six review gaps in §15 are fixed (161 tests) and §11.3 is now a runbook; desktop checks M1–M13 passed in Chrome on 2026-10-05. One check is left for the owner: the phone + TalkBack row in §11.3. Deviations found while building are marked **(as built)**. |
+| Status | Built 2026-10-04: lint, typecheck and all 150 tests pass (§12 has the measured numbers). Follow-ups 2026-10-05: the six review gaps in §15 are fixed (161 tests) and §11.3 is now a runbook; desktop checks M1–M13 passed in Chrome on 2026-10-05. The phone + TalkBack row in §11.3 moved to Batch 7 §13 (M7) on 2026-10-06. Deviations found while building are marked **(as built)**. |
 | Depends on | Batch 2 (skeleton, tokens, components) |
 | Brief sections | §2 customer 1–3, §11 pause banner, §12 first steps, §13 Customer menu, §14 sold-out display, §24 |
 | Endpoints | `GET /api/menu` |
@@ -269,7 +269,7 @@ The page picks up database changes within 60 s, or when the tab regains focus (c
 - [x] Menu screen, cart and every state in §7 implemented with copy in `copy.ts`.
 - [x] Cart is id + quantity only (plus `name` for notices, §5.1); prices always come from the menu.
 - [x] Unit and integration tests pass.
-- [ ] Manual checks in §11.3 done on a real phone (owner).
+- [x] Manual checks in §11.3 done on desktop. **(as built)** The phone row moved to Batch 7 §13 (M7) on 2026-10-06.
 - [x] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass. **(as built)** `pnpm test`: 13 files, 150 tests; after the §15 follow-ups, 14 files, 161 tests. `pnpm build`: the `/` entry chunk is 119.12 KB gzipped JS (119.21 KB after the follow-ups) plus 4.65 KB gzipped CSS, inside the 130 KB budget (Batch 1 §10.5).
 - [x] `CLAUDE.md` batch table updated.
 
