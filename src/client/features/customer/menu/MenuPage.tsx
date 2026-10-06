@@ -1,15 +1,19 @@
 import { formatBusinessDate } from '@shared/time.js';
 import { useMemo } from 'react';
+import { useLocation } from 'react-router';
 import { Banner } from '../../../components/Banner';
 import { CustomerPage } from '../../../components/CustomerPage';
 import { EmptyState } from '../../../components/EmptyState';
 import { ErrorState } from '../../../components/ErrorState';
 import { Skeleton } from '../../../components/Skeleton';
 import { copy } from '../../../copy';
+import { isCartEmptyState } from '../cart/cart-empty';
 import { cartView } from '../cart/cart-reducer';
 import { CartBar } from '../cart/CartBar';
 import { CartNotices } from '../cart/CartNotices';
 import { useCart } from '../cart/CartProvider';
+import { useDeliveryOptions } from '../checkout/use-delivery-options';
+import { DeliverySummaryLine } from './DeliverySummaryLine';
 import { ItemCard } from './ItemCard';
 import { SoldOutList } from './SoldOutList';
 import { useMenu } from './use-menu';
@@ -38,6 +42,10 @@ export function MenuPage() {
   const { cart, notices, add, increment, decrement, dismissNotices } = useCart();
   // Reconciles the cart on every successful fetch (see useMenu).
   const { data, error, isValidating, mutate } = useMenu();
+  // Never awaited: the summary appears when it arrives and stays hidden on error. Mounting it
+  // here also warms the cache for checkout (§8).
+  const delivery = useDeliveryOptions(60_000);
+  const location = useLocation();
 
   const quantities = useMemo(
     () => new Map(cart.lines.map((line) => [line.menuItemId, line.quantity])),
@@ -62,6 +70,16 @@ export function MenuPage() {
     );
   }
 
+  const aboveMenu = (
+    <>
+      {delivery.data ? <DeliverySummaryLine options={delivery.data} /> : null}
+      {isCartEmptyState(location.state) && cart.lines.length === 0 ? (
+        <Banner tone="info" className="mb-3">
+          {copy.customer.checkout.cartEmpty}
+        </Banner>
+      ) : null}
+    </>
+  );
   const subline = m.subline(formatBusinessDate(data.businessDate));
   const pausedBanner = data.ordersPaused ? (
     <Banner tone="warning" className="mb-3">
@@ -72,6 +90,7 @@ export function MenuPage() {
   if (data.items.length === 0) {
     return (
       <CustomerPage subline={subline}>
+        {aboveMenu}
         {pausedBanner}
         <CartNotices notices={notices} onDismiss={dismissNotices} />
         <EmptyState title={m.emptyTitle} message={m.emptyMessage} icon="clock" />
@@ -84,6 +103,7 @@ export function MenuPage() {
 
   return (
     <CustomerPage subline={subline} reserveCartBar>
+      {aboveMenu}
       <h2 className="sr-only">{m.title}</h2>
       {pausedBanner}
       <CartNotices notices={notices} onDismiss={dismissNotices} />

@@ -13,16 +13,18 @@ const TONES: Record<Tone, { box: string; icon: IconName }> = {
 
 interface BannerProps extends Omit<ComponentProps<'div'>, 'role'> {
   tone: Tone;
+  /** Defaults to `alert` for danger and `status` otherwise. */
+  role?: 'status' | 'alert';
   children: ReactNode;
   /** Optional action, e.g. a retry button. */
   action?: ReactNode;
 }
 
-export function Banner({ tone, children, action, className = '', ...rest }: BannerProps) {
+export function Banner({ tone, role, children, action, className = '', ...rest }: BannerProps) {
   const { box, icon } = TONES[tone];
   return (
     <div
-      role={tone === 'danger' ? 'alert' : 'status'}
+      role={role ?? (tone === 'danger' ? 'alert' : 'status')}
       // Focusable by script so a screen reader (and keyboard user) lands on a new error.
       tabIndex={-1}
       className={`flex items-start gap-3 rounded-control border p-3 text-sm font-medium ${box} ${className}`}

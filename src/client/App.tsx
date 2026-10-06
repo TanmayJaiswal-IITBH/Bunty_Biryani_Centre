@@ -1,11 +1,9 @@
 import { Suspense, lazy } from 'react';
 import { Outlet, Route, Routes } from 'react-router';
-import { BackToMenuLink } from './components/BackToMenuLink';
 import { CustomerPage } from './components/CustomerPage';
-import { EmptyState } from './components/EmptyState';
 import { Skeleton } from './components/Skeleton';
-import { copy } from './copy';
 import { CartProvider } from './features/customer/cart/CartProvider';
+import { CheckoutPage } from './features/customer/checkout/CheckoutPage';
 import { MenuPage } from './features/customer/menu/MenuPage';
 import { NotFound } from './NotFound';
 
@@ -21,19 +19,6 @@ function AdminFallback() {
   );
 }
 
-// Batch 4 replaces this placeholder with the real checkout page.
-function CheckoutPlaceholder() {
-  return (
-    <CustomerPage>
-      <EmptyState
-        title={copy.customer.checkout.comingSoon}
-        icon="clock"
-        action={<BackToMenuLink />}
-      />
-    </CustomerPage>
-  );
-}
-
 export function App() {
   return (
     <Routes>
@@ -45,7 +30,7 @@ export function App() {
         }
       >
         <Route path="/" element={<MenuPage />} />
-        <Route path="/checkout" element={<CheckoutPlaceholder />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         <Route
           path="*"
           element={

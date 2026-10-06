@@ -32,7 +32,7 @@ The project is built in batches (brief §31). Do **only the current batch**; don
 | 1 | Architecture, database schema, API design | `batch-01-architecture.md` | Approved 2026-10-04 |
 | 2 | Project setup, database, migrations + seed, admin authentication | `batch-02-setup-auth.md` | Built 2026-10-04; owner still to run `pnpm admin:create` in PowerShell (spec §13) |
 | 3 | Customer menu + cart | `batch-03-menu-cart.md` | Built 2026-10-04; review gaps (§15) fixed and desktop runbook M1–M13 passed 2026-10-05; owner still to run the phone + TalkBack check in spec §11.3 |
-| 4 | Checkout + batch/express delivery selection | `batch-04-checkout-delivery.md` | — |
+| 4 | Checkout + batch/express delivery selection | `batch-04-checkout-delivery.md` | Built 2026-10-06; desktop runbook K1–K13 passed 2026-10-06; owner still to run K14 (Enter key) and the phone + TalkBack check (spec §13.5) |
 | 5 | Order creation + inventory | `batch-05-orders-inventory.md` | — |
 | 6 | Vendor dashboard + batch grouping (+ admin menu, stock, delivery settings) | `batch-06-vendor-dashboard.md` | — |
 | 7 | Testing + mobile polish | `batch-07-testing-polish.md` | — |
@@ -91,7 +91,7 @@ These protect food, cash and customers. Check every one in code review.
 5. **Orders are created only by `order.service.createOrder`**, in one transaction, following Batch 1 §6.12 step by step. It's idempotent on `clientRequestId`, including retries that overlap the original (a rejected request re-checks the id before returning its error, §6.12 step 14). A failure leaves no order and no stock change.
 6. **Locking:** order row first (`FOR UPDATE`), then menu items in ascending id order. Never take locks in another order.
 7. **Order status and payment-status changes go only through `status-machine.ts`** (Batch 1 §6.9, Batch 6 §4). Cancel restores stock; same-state requests are no-ops.
-8. **COD only:** never show or return "paid" for an order whose cash hasn't been collected. Customers see "Payment: Cash on delivery"; the vendor sees "COD · Pending / Collected".
+8. **COD only:** never show or return "paid" for an order whose cash hasn't been collected. Customers see "Payment: CASH ON DELIVERY"; the vendor sees "COD · Pending / Collected".
 9. **Batch orders are never merged**, and express orders never have a slot or join a batch group. Grouping happens only in dashboard queries.
 10. **Every `/api/admin/*` route except login sits behind `requireAdmin`**, and admin writes (and login) also pass the Origin check. Frontend route guards are UX only.
 11. **No secrets in the frontend or the repo.** Secrets live in env vars validated at boot. Logs never contain request bodies, phone numbers, passwords or cookies.
